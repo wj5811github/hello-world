@@ -1,0 +1,104 @@
+docker-compose 管理mysql和tomcat容器
+yml文件以key: value的方式指定配置信息，多个配置信息以换行+缩进方式来区分  禁用TAB键
+docker-compose使用默认数据卷路径时需要写全默认路径 如：- /var/lib/docker/volumes/nginx-conf:/etc/nginx/conf.d
+
+docker-compose.yml
+version: '3.1'
+services:
+  mysql:     #服务名称
+    restart: always          #跟随启动
+    image: daocloud.io/library/mysql:5.7.4   #拉取镜像
+    container_name: mysql  #指定容器名称
+    ports:
+      - 3306:3306    #端口号的映射
+    environment:
+      MYSQL_ROOT_PASSWORD: root    #指定root的密码为root
+      TZ: Asia/Shanghai
+    volumes:
+      - /opt/docker_mysql_tomcat/mysql_data:/var/lib/mysql   #映射数据卷
+  tomcat:     #服务名称
+    restart: always          #跟随启动
+    image: daocloud.io/library/tomcat:8.5.15-jre8   #拉取镜像
+    container_name: tomcat  #指定容器名称
+    ports:
+      - 8080:8080    #端口号的映射
+    environment:
+      TZ: Asia/Shanghai
+    volumes:
+      - /opt/docker_mysql_tomcat/tomcat_webapps:/usr/local/tomcat/webapps   #映射数据卷
+      - /opt/docker_mysql_tomcat/tomcat_logs:/usr/local/tomcat/logs
+
+docker-compose配合Dockerfile文件一起使用
+#docker-compose.yml
+version: '3.1'
+servers:
+  ssm:
+    restart: always
+    build:
+      context: ../
+      dockerfile: Dockerfile
+    image: ssm:1.0.1
+    container_name: ssm
+    ports:
+      - 8081:8080
+    environment:
+      TZ: Asia/Shanghai
+
+#Dockerfile
+from daocloud.io/library/tomcat:8.5.15-jre8
+copy ssm.war /usr/local/tomcat/webapps
+
+mkdir  docker_ssm
+touch Dockerfile
+cp ssm到Dockerfile同级目录
+mkdir  docker-compose
+touch docker-compose.yml  
+  
+docker-compose up -d
+
+如果自定义镜像不存在，会帮我们构建，如果存在则会直接运行
+如需重新构建的话 则 docker-compose build
+运行前重新构建 则  docker-compose up -d --build
+
+version: '3.1'
+services:
+  nginx:
+    restart: always
+    image: daocloud.io/library/nginx:1.13.2
+    container_name: nginx
+    ports:
+      - 80:80
+    environment:
+      TZ: Asia/Shanghai
+    volumes:
+      - /var/lib/docker/volumes/nginx-conf:/etc/nginx/conf.d
+      - /var/lib/docker/volumes/nginx-html:/usr/share/nginx/html
+  mysql:     
+    restart: always         
+    image: daocloud.io/library/mysql:5.7.4   
+    container_name: mysql 
+    ports:
+      - 3306:3306    
+    environment:
+      MYSQL_ROOT_PASSWORD: root    
+      TZ: Asia/Shanghai
+    volumes:
+      - /var/lib/docker/volumes/mysql-data:/var/lib/mysql   
+  tomcat:     
+    restart: always          
+    image: daocloud.io/library/tomcat:8.5.15-jre8  
+    container_name: tomcat  
+    ports:
+      - 8080:8080    
+    environment:
+      TZ: Asia/Shanghai
+    volumes:
+      - /var/lib/docker/volumes/tomcat-webapps:/usr/local/tomcat/webapps   
+      - /var/lib/docker/volumes/tomcat-logs:/usr/local/tomcat/logs
+
+3、docker-compose常用命令
+启动  docker-compose up -d
+关闭并删除  docker-compose down
+启停重已存在的由docker-compose管理的容器 docker-compose start|stop|restart
+查看 docker-compose ps
+查看日志 docker-compose logs -f
