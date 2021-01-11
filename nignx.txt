@@ -1,0 +1,145 @@
+Nginx常用命令
+nginx -s stop   立刻停止
+nginx -s reload  重新加载配置文件
+nginx -s quit  平滑停止
+nginx -t  测试配置文件是否正确
+查看版本：nginx -v
+查看nginx安装目录：ps  -ef | grep nginx
+检查配置文件：nginx -t
+启动：systemctl start nginx.service
+停止：systemctl stop nginx.service
+重启：systemctl restart nginx.service
+设置开机自启动：systemctl enable nginx.service
+停止开机自启动：systemctl disable nginx.service
+查看当前状态：systemctl status nginx.service
+查看所有已启动的服务：systemctl list-units --type=service
+
+nginx反向代理  只起代理作用，不做动静分离
+server {
+    listen       80;
+    server_name  localhost;
+    location / {
+        proxy_pass   http://172.21.0.3:8080;
+    }  
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   /usr/share/nginx/html;
+    }
+}
+nginx配置前端访问本地文件夹
+location  /wj {
+	root  /usr/share/nginx/html;
+	autoindex on;
+        }
+nginx反向代理tomcat时无法加载js/css/时的增加配置
+location ~ .*\.(js|css)$ {
+             proxy_pass http://127.0.0.1:8080;
+         }
+
+nginx支持php须在server块里增加一个location：
+location / {
+	root   /usr/share/nginx/html;
+	index  index.html index.htm index.php;
+ }
+location ~ \.php$ {
+	root   /usr/share/nginx/html;
+	fastcgi_pass   127.0.0.1:9000;
+	fastcgi_index  index.php;
+	fastcgi_param  SCRIPT_FILENAME  $document_root$fastcgi_script_name;
+	include        fastcgi_params;
+ }
+
+使用浏览器查看很简单，只需要在网站目录创建一个PHP文件，使用上面提到的phpinfo()函数，如：
+<?php
+phpinfo();
+?>
+
+http {
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log  /var/log/nginx/access.log  main;
+
+    sendfile            on;
+    tcp_nopush          on;
+    tcp_nodelay         on;
+    keepalive_timeout   65;
+    types_hash_max_size 2048;
+
+    include             /etc/nginx/mime.types;
+    default_type        application/octet-stream;
+
+    # Load modular configuration files from the /etc/nginx/conf.d directory.
+    # See http://nginx.org/en/docs/ngx_core_module.html#include
+    # for more information.
+    include /etc/nginx/conf.d/*.conf;   
+    #有这一行可在/etc/nginx/conf.d/写server块，不必在nginx.conf中增加server块
+
+    server {
+        listen       80 default_server;
+        listen       [::]:80 default_server;
+        server_name  _;
+        root         /usr/share/nginx/html;
+
+        # Load configuration files for the default server block.
+        include /etc/nginx/default.d/*.conf;
+       #有这一行可在/etc/nginx/default.d/写location块，不必在nginx.conf中增加location块
+        location / {
+              root html;
+             index  index.html  index.htm;
+        }
+
+        error_page 404 /404.html;
+        location = /404.html {
+        }
+
+        error_page 500 502 503 504 /50x.html;
+        location = /50x.html {
+        }
+    }
+
+
+server {
+    listen       80;
+    server_name  localhost;
+
+    #charset koi8-r;
+    #access_log  /var/log/nginx/log/host.access.log  main;
+
+    location / {
+        root   /usr/share/nginx/html;
+        index  index.html index.htm;
+    }
+
+    #error_page  404              /404.html;
+    # redirect server error pages to the static page /50x.html
+    #
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   /usr/share/nginx/html;
+    }
+
+    # proxy the PHP scripts to Apache listening on 127.0.0.1:80
+    #
+    #location ~ \.php$ {
+    #    proxy_pass   http://127.0.0.1;
+    #}
+
+    # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
+    #
+    #location ~ \.php$ {
+    #    root           html;
+    #    fastcgi_pass   127.0.0.1:9000;
+    #    fastcgi_index  index.php;
+    #    fastcgi_param  SCRIPT_FILENAME  /scripts$fastcgi_script_name;
+    #    include        fastcgi_params;
+    #}
+
+    # deny access to .htaccess files, if Apache's document root
+    # concurs with nginx's one
+    #
+    #location ~ /\.ht {
+    #    deny  all;
+    #}
+}
