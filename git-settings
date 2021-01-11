@@ -1,22 +1,31 @@
-git config --global user.name  'wj5811github'
-git config --global user.email  'wj5811@163.com'
+github仓库的用法：
+初始化全局配置信息：
+git config --global user.name 'wj5811github'
+git config --global user.email 'wj5811@163.com'
+git config --list   查看配置信息
+git config --global -e    修改git全局配置文件
 
+新建代码仓库并初始化：
 mkdir test 
 cd  test
+进入到test仓库内初始化：
 git init  生成一个.git隐藏文件
 touch a1.php
 git status
 git add hello.php  提交到暂存区
 git commit -m '提交描述'  提交到本地git仓库
-git push hello.php    提交到远程github仓库
+
 vi a1.php
 
 rm -rf a1.php  删除本地文件
-git rm a1.php 删除本地git上的文件
+git rm a1.php 删除本地git仓库上的文件
 git commit -m '描述'
 
-git config --list   查看初始化信息
-git clone 仓库地址    从github仓库下载到本地
+先clone github仓库上的地址  从github仓库下载到本地
+git clone https://github.com/wj5811github/linux-windows.git
+进入地址对应的仓库再push
+git push  文件名   推送到github远程服务器上
+  
 
 没有权限无法同步的解决办法：
 vi .git/config
