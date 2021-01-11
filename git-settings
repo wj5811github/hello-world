@@ -1,0 +1,24 @@
+git config --global user.name  'wj5811github'
+git config --global user.email  'wj5811@163.com'
+
+mkdir test 
+cd  test
+git init  生成一个.git隐藏文件
+touch a1.php
+git status
+git add hello.php  提交到暂存区
+git commit -m '提交描述'  提交到本地git仓库
+git push hello.php    提交到远程github仓库
+vi a1.php
+
+rm -rf a1.php  删除本地文件
+git rm a1.php 删除本地git上的文件
+git commit -m '描述'
+
+git config --list   查看初始化信息
+git clone 仓库地址    从github仓库下载到本地
+
+没有权限无法同步的解决办法：
+vi .git/config
+[remote "origin"]
+   url=https://wj5811github:Wj111888wj@github.com/用户名/仓库名.git
